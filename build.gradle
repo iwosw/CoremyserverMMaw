@@ -116,10 +116,14 @@ repositories {
     // Репозиторий Forge обязателен
     maven { url = 'https://maven.minecraftforge.net/' }
     mavenCentral()
+    flatDir {
+        dirs 'libs'
+    }
 }
 
 dependencies {
     minecraft 'net.minecraftforge:forge:1.20.1-47.2.0'
+    compileOnly fg.deobf(fileTree(dir: 'libs', include: ['*.jar']))
 }
 
 // This block of code expands all declared replace properties in the specified resource targets.

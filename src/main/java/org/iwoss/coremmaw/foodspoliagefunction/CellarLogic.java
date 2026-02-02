@@ -3,7 +3,8 @@ package org.iwoss.coremmaw.foodspoliagefunction;
 import net.minecraft.core.BlockPos;
 import net.minecraft.tags.BlockTags;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.Blocks;
+
 public class CellarLogic {
 
     /*
@@ -11,41 +12,36 @@ public class CellarLogic {
     1.0 = default speed
     0.2 = so good cellar (five times slower)
      */
-     public static float getTimeMuLtipplier(Level level, BlockPos pos ) {
+     public static float getTimeMultiplier(Level level, BlockPos pos ) {
          float multiplier = 1.0f;
 
-         //FIRST. check depths (underground ever cold)
-        if (pos.getY() < level.getSeaLevel()) {
+         //FIRST. check isolation of sky (underground ever cold)
+        if (!level.canSeeSky(pos)) {
             multiplier -= 0.2f;
 
         }
 
         //SECOND. check surroundings (hide stone: default stone, deep stone and bricks)
-        int insulationBlocks = 0;
-        //checking area 5x5x5 around the cellar
-         for (BlockPos p : BlockPos.betweenClosed(pos.offset(-2,-2,-2), pos.offset(2,2,2))) {
-             BlockState state = level.getBlockState(p);
-             if (state.is(BlockTags.BASE_STONE_OVERWORLD) || state.is(BlockTags.STONE_BRICKS)) {
-                 insulationBlocks++;
+        float biomeTemp = level.getBiome(pos).get().getBaseTemperature();
+        if (biomeTemp < 0.5f) {
+            multiplier -= 0.15f; // base cold of mountains
 
-             }
-         }
-         //if around too many stone (min 30 in radius 2), give a bonus
-         if (insulationBlocks > 35) {
-             multiplier -= 0.5f;
+        }
+        //THIRD. Stone structure (termo isolation)
+         int stoneCount = 0;
+        for (BlockPos p : BlockPos.betweenClosed(pos.offset(-1, -1, -1), pos.offset(1, 1, 1))) {
+            if (level.getBlockState(p).is(BlockTags.BASE_STONE_OVERWORLD)) stoneCount++;
 
-         }
+        }
+        if (stoneCount > 10) multiplier -= 0.3f;
 
-         //THIRD. CHeck the light (torches and sun generate heat)
-         int light = level.getMaxLocalRawBrightness(pos);
-         if (light > 7) {
-             multiplier += 0.3f; //on lights spoilage so good
+        //FOURTH. Bonus of barrel
+         if (level.getBlockState(pos).is(Blocks.BARREL)) {
+             multiplier -= 0.15f; // barrel is so good for your food
 
          }
-    //Forbid min multiplier to food spoilage
-        return Math.max(multiplier, 0.15f);
 
-
+        return Math.max(multiplier, 0.15f); // maximum doorstep of conservation
 
      }
 

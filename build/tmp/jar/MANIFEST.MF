@@ -1,0 +1,9 @@
+Manifest-Version: 1.0
+Specification-Title: coremmaw
+Specification-Vendor: 
+Specification-Version: 1
+Implementation-Title: coremmaw
+Implementation-Version: 1.0-SNAPSHOT
+Implementation-Vendor: 
+Implementation-Timestamp: 2026-01-31T13:14:05+0300
+
