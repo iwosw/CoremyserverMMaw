@@ -7,7 +7,7 @@ issueTrackerURL="https://github.com/yourusername/coremmaw/issues"
 modId="coremmaw"
 version="1.0.0"
 displayName="Core MMAW"
-authors="oivan"
+authors="IWOSS"
 description='''
 Мод запрещает рост культур в неподходящих биомах (Пустыни, Океаны и климатические несоответствия).
 '''
@@ -24,4 +24,11 @@ modId="minecraft"
 mandatory=true
 versionRange="[1.20.1]"
 ordering="NONE"
+side="BOTH"
+
+[[dependencies.coremmaw]]
+modId="geckolib"
+mandatory=true
+versionRange="[4.0,)"
+ordering="AFTER"
 side="BOTH"

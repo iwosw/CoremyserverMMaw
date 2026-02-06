@@ -41,7 +41,7 @@ public class LevyCommand {
 
         UUID scrollID = scroll.getTag().getUUID("ScrollID");
 
-        // Ищем всех жителей в радиусе 64 блоков
+        // seek all your villagers in area 64 blocks
         AABB area = new AABB(player.getX() - 64, player.getY() - 32, player.getZ() - 64,
                 player.getX() + 64, player.getY() + 32, player.getZ() + 64);
 
@@ -62,45 +62,43 @@ public class LevyCommand {
         for (int i = 0; i < toConscript; i++) {
             Villager villager = mySerfs.get(i);
 
-            // Спавним рекрута из мода Recruits
+            // spawn recruit
             EntityType<?> recruitType = EntityType.byString("recruits:recruit").orElse(null);
             if (recruitType != null) {
                 Entity recruit = recruitType.create(player.level());
                 if (recruit instanceof Mob mob) {
-                    // 1. ПОЗИЦИЯ И ИНИЦИАЛИЗАЦИЯ
+                    // 1. POSITION AND INITIALIZATION
                     mob.moveTo(villager.getX(), villager.getY(), villager.getZ(), villager.getYRot(), villager.getXRot());
                     mob.finalizeSpawn(player.serverLevel(), player.level().getCurrentDifficultyAt(mob.blockPosition()), MobSpawnType.MOB_SUMMONED, null, null);
 
                     CompoundTag vNbt = villager.getPersistentData();
 
-                    // 1. Берем пол (Gender)
-                    // Пытаемся взять из NBT, если нет - считаем по UUID
+                    // 1. Have gender (Gender)
                     int gender = vNbt.contains("Gender") ? vNbt.getInt("Gender") :
                             org.iwoss.coremmaw.util.VillagerBiologyController.getGenderFromUUID(villager);
 
-                    // 2. Берем скин (SkinID)
-                    // Пытаемся взять из NBT, если нет - считаем по UUID
+                    // 2. Have skin (SkinID)
                     int skinId = vNbt.contains("SkinID") ? vNbt.getInt("SkinID") :
                             org.iwoss.coremmaw.util.VillagerBiologyController.getSkinFromUUID(villager);
 
-                    // 3. ПЕРЕДАЕМ ДАННЫЕ В РЕКРУТА
+                    // 3. data for recruit
                     mob.getPersistentData().putInt("Gender", gender);
                     mob.getPersistentData().putInt("SkinID", skinId);
                     mob.getPersistentData().putBoolean("is_serf", true);
 
-                    // Сохраняем ID грамоты для команды /dismiss
+                    // save id scroll
                     if (vNbt.contains("BoundScrollID")) {
                         mob.getPersistentData().putUUID("OriginalScrollID", vNbt.getUUID("BoundScrollID"));
                     }
 
-                    // 4. ДЕЛАЕМ ВЛАДЕЛЬЦЕМ И РАНДОМИЗИРУЕМ СТАТЫ
+                    // 4. CREATE OWNER AND RANDOMIZE STATS
                     org.iwoss.coremmaw.compat.ModCompat.tryMakeOwner(mob, player);
 
                     if (mob instanceof com.talhanation.recruits.entities.AbstractRecruitEntity recruitEntity) {
                         org.iwoss.coremmaw.util.RecruitRandomizer.randomize(recruitEntity);
                     }
 
-                    // 5. ИМЯ И ПРОФЕССИЯ
+                    // 5. NAME AND PROFESSION
                     String profId = villager.getVillagerData().getProfession().toString().replace("minecraft:", "");
                     String profName = org.iwoss.coremmaw.util.SkinManager.getRuProf(profId, gender);
 
@@ -113,7 +111,7 @@ public class LevyCommand {
                     mob.setCustomNameVisible(true);
                     mob.setPersistenceRequired();
 
-                    // 6. СПАВН
+                    // 6. SPAWN
                     player.level().addFreshEntity(mob);
 
                     villager.discard();
@@ -123,8 +121,7 @@ public class LevyCommand {
         }
 
 
-        // Обновляем счетчик в грамоте
-        // В конце цикла призыва в LevyCommand:
+        // updating counter in scroll
         int males = scroll.getTag().getInt("CountMale");
         int recruits = scroll.getTag().getInt("CountRecruits");
         scroll.getTag().putInt("CountMale", Math.max(0, males - actual));

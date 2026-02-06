@@ -31,6 +31,7 @@ import net.minecraftforge.registries.RegistryObject;
 import org.iwoss.coremmaw.commands.DismissCommand;
 import org.iwoss.coremmaw.commands.LevyCommand;
 import org.iwoss.coremmaw.init.ItemInit;
+import org.iwoss.coremmaw.init.ModItems;
 import org.slf4j.Logger;
 
 // The value here should match an entry in the META-INF/mods.toml file
@@ -66,8 +67,12 @@ public class Coremmaw {
 
         modEventBus.addListener(this::commonSetup);
 
+        ModItems.ITEMS.register(modEventBus);
+
         // Твои новые предметы
         ItemInit.ITEMS.register(modEventBus);
+
+        org.iwoss.coremmaw.init.ModEntities.ENTITY_TYPES.register(modEventBus);
 
         // Твои существующие регистрации (блоки, табы и т.д.)
         // Оставь их по одному разу!
@@ -102,7 +107,37 @@ public class Coremmaw {
         if (event.getTabKey() == CreativeModeTabs.TOOLS_AND_UTILITIES) {
             event.accept(ItemInit.OWNERSHIP_SCROLL.get());
         }
+
+        if (event.getTabKey() == CreativeModeTabs.SPAWN_EGGS) {
+            event.accept(ModItems.BUFFALO_SPAWN_EGG);
+        }
+
     }
+
+
+    @Mod.EventBusSubscriber(modid = MODID, bus = Mod.EventBusSubscriber.Bus.MOD)
+    public static class ModEventBusEvents {
+
+        // 1. Регистрация атрибутов (Жизни, Атака)
+        @SubscribeEvent
+        public static void entityAttributeEvent(net.minecraftforge.event.entity.EntityAttributeCreationEvent event) {
+            event.put(org.iwoss.coremmaw.init.ModEntities.BUFFALO.get(),
+                    org.iwoss.coremmaw.animals.entity.BuffaloEntity.createAttributes().build());
+        }
+
+        // 2. Регистрация правил спавна (Где и как часто)
+        @SubscribeEvent
+        public static void registerSpawnPlacements(net.minecraftforge.event.entity.SpawnPlacementRegisterEvent event) {
+            event.register(
+                    org.iwoss.coremmaw.init.ModEntities.BUFFALO.get(),
+                    net.minecraft.world.entity.SpawnPlacements.Type.ON_GROUND,
+                    net.minecraft.world.level.levelgen.Heightmap.Types.MOTION_BLOCKING_NO_LEAVES,
+                    org.iwoss.coremmaw.animals.entity.BuffaloEntity::checkBuffaloSpawnRules, // Ссылка на наш метод с водой
+                    net.minecraftforge.event.entity.SpawnPlacementRegisterEvent.Operation.REPLACE
+            );
+        }
+    }
+
 
     // You can use SubscribeEvent and let the Event Bus discover methods to call
     @SubscribeEvent
@@ -125,14 +160,23 @@ public class Coremmaw {
             event.registerEntityRenderer(net.minecraft.world.entity.EntityType.VILLAGER,
                     context -> new org.iwoss.coremmaw.render.HumanoidSerfRenderer<>(context));
 
+            event.registerEntityRenderer(org.iwoss.coremmaw.init.ModEntities.BUFFALO.get(),
+                    org.iwoss.coremmaw.animals.client.BuffaloRenderer::new);
+
+
             // Регистрация для рекрутов
             net.minecraft.world.entity.EntityType<?> recruitType = net.minecraft.world.entity.EntityType.byString("recruits:recruit").orElse(null);
             if (recruitType != null) {
                 // Кастуем тип для корректной регистрации
                 event.registerEntityRenderer((net.minecraft.world.entity.EntityType) recruitType,
                         context -> new org.iwoss.coremmaw.render.HumanoidSerfRenderer<>(context));
+
             }
         }
     }
+
+
+
+
 }
 

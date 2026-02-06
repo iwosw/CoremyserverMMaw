@@ -16,7 +16,11 @@ import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.registries.ForgeRegistries;
 
-@Mod.EventBusSubscriber(modid = Coremmaw.MODID)
+//bad and not optimized
+//update soon
+
+
+//@Mod.EventBusSubscriber(modid = Coremmaw.MODID)
 public class CropGrowthHandler {
 
     private static boolean canGrow(LevelAccessor world, BlockPos pos, Block block) {

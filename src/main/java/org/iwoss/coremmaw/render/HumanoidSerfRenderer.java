@@ -18,22 +18,22 @@ public class HumanoidSerfRenderer<T extends LivingEntity> extends LivingEntityRe
 
     @Override
     public ResourceLocation getTextureLocation(T entity) {
-        // Инициализируем значения по умолчанию сразу, чтобы Java не ругалась
+        // initializing
         int gender = 0;
         int skinId = 1;
 
-        // 1. Проверяем NBT (самый приоритетный вариант для рекрутов и уже созданных жителей)
+        // 1. check NBT
         if (entity.getPersistentData().contains("Gender") && entity.getPersistentData().contains("SkinID")) {
             gender = entity.getPersistentData().getInt("Gender");
             skinId = entity.getPersistentData().getInt("SkinID");
         }
-        // 2. Если NBT пуст (например, "дикий" житель), рассчитываем по UUID
+        // 2. calculate along UUID
         else if (entity instanceof Villager villager) {
             gender = VillagerBiologyController.getGenderFromUUID(villager);
             skinId = VillagerBiologyController.getSkinFromUUID(villager);
         }
 
-        // Страховка от нулевого или отрицательного ID
+        // insurance
         if (skinId <= 0) skinId = 1;
 
         return SkinManager.getSkin(gender, skinId);

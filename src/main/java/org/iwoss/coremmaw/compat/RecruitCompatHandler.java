@@ -19,13 +19,12 @@ public class RecruitCompatHandler {
         if (entity instanceof AbstractRecruitEntity recruit && player.level() instanceof ServerLevel serverLevel) {
 
             // ==========================================
-            // ШАГ 1: Базовая привязка (Владелец и Инвентарь)
+            // ШАГ 1: Base binding
             // ==========================================
             recruit.setOwnerUUID(Optional.of(player.getUUID()));
             recruit.setMoral(100.0F);
             recruit.resetPaymentTimer();
 
-            // Взлом поля OWNED для работы ПКМ
             try {
                 Field ownedField = findField(AbstractRecruitEntity.class, "OWNED");
                 if (ownedField != null) {
@@ -40,16 +39,15 @@ public class RecruitCompatHandler {
 
 
             // ==========================================
-            // ШАГ 2: Взлом Групп (для работы GUI команд)
+            // ШАГ 2: Reflection
             // ==========================================
             try {
-                // Достаем глобальные данные о группах
+                // data of group
                 RecruitsGroupsSaveData saveData = RecruitsGroupsSaveData.get(serverLevel);
                 List<RecruitsGroup> allGroups = saveData.getAllGroups(); // Этот метод должен быть public
 
                 RecruitsGroup playerGroup = null;
 
-                // Ищем группу игрока вручную через рефлексию (так как метод getPlayerUUID может не существовать)
                 for (RecruitsGroup g : allGroups) {
                     UUID groupOwnerID = getFieldValue(g, UUID.class, "playerUUID", "player", "owner");
                     if (groupOwnerID != null && groupOwnerID.equals(player.getUUID())) {
@@ -58,42 +56,38 @@ public class RecruitCompatHandler {
                     }
                 }
 
-                // Если группы нет — создаем её с нуля через рефлексию
                 if (playerGroup == null) {
-                    // Используем пустой конструктор (он есть всегда для NBT)
+
                     Constructor<RecruitsGroup> constructor = RecruitsGroup.class.getDeclaredConstructor();
                     constructor.setAccessible(true);
                     playerGroup = constructor.newInstance();
 
                     UUID newGroupUUID = UUID.randomUUID();
 
-                    // Заполняем приватные поля новой группы
+
                     setFieldValue(playerGroup, "playerUUID", player.getUUID()); // ID владельца
                     setFieldValue(playerGroup, "uuid", newGroupUUID);           // ID группы
                     setFieldValue(playerGroup, "name", player.getScoreboardName() + " Army"); // Имя
 
-                    // Инициализируем список юнитов, если он null
                     setFieldValue(playerGroup, "units", new ArrayList<UUID>());
 
-                    // Добавляем новую группу в общий список
                     allGroups.add(playerGroup);
                 }
 
-                // Добавляем рекрута в список юнитов группы
-                // Ищем поле списка (обычно называется units, members или recruitUUIDs)
+
                 List<UUID> unitsList = getFieldValue(playerGroup, List.class, "units", "recruitUUIDs", "members");
                 if (unitsList != null && !unitsList.contains(recruit.getUUID())) {
                     unitsList.add(recruit.getUUID());
                 }
 
-                // Привязываем рекрута к ID группы
+
                 UUID groupUUID = getFieldValue(playerGroup, UUID.class, "uuid", "groupID", "id");
                 if (groupUUID != null) {
                     recruit.setGroupUUID(groupUUID);
                     recruit.needsGroupUpdate = true;
                 }
 
-                // Сохраняем изменения
+
                 saveData.setDirty();
 
             } catch (Exception e) {
@@ -101,15 +95,15 @@ public class RecruitCompatHandler {
                 e.printStackTrace();
             }
 
-            // ШАГ 3: Финальные штрихи
+
             recruit.getPersistentData().putInt("FollowState", 1);
             recruit.getPersistentData().putBoolean("isOwned", true);
         }
     }
 
-    // --- Вспомогательные методы для чистоты кода ---
+    // ---  and other methods  ---
 
-    // Установить значение в приватное поле
+
     private static void setFieldValue(Object instance, String fieldName, Object value) {
         try {
             Field field = findField(instance.getClass(), fieldName);
@@ -117,7 +111,7 @@ public class RecruitCompatHandler {
         } catch (Exception ignored) {}
     }
 
-    // Получить значение из приватного поля (с перебором вариантов имен)
+
     private static <T> T getFieldValue(Object instance, Class<T> type, String... possibleNames) {
         for (String name : possibleNames) {
             try {
@@ -128,7 +122,7 @@ public class RecruitCompatHandler {
                 }
             } catch (Exception ignored) {}
         }
-        // Если по имени не нашли, ищем первое поле подходящего типа (крайняя мера)
+
         try {
             for (Field field : instance.getClass().getDeclaredFields()) {
                 field.setAccessible(true);
@@ -140,14 +134,14 @@ public class RecruitCompatHandler {
         return null;
     }
 
-    // Найти поле и открыть доступ
+
     private static Field findField(Class<?> clazz, String name) {
         try {
             Field f = clazz.getDeclaredField(name);
             f.setAccessible(true);
             return f;
         } catch (NoSuchFieldException e) {
-            // Иногда поля спрятаны в суперклассе
+
             if (clazz.getSuperclass() != null) return findField(clazz.getSuperclass(), name);
         }
         return null;

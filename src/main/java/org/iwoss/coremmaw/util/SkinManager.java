@@ -6,7 +6,7 @@ import java.util.List;
 import java.util.Random;
 
 public class SkinManager {
-    // Укажи здесь точное количество своих файлов
+    // exact number of your skins
     public static final int MALE_COUNT = 36;
     public static final int FEMALE_COUNT = 15;
     private static final Random RANDOM = new Random();
@@ -14,16 +14,16 @@ public class SkinManager {
     public static ResourceLocation getSkin(int gender, int skinId) {
         // 0 - male, 1 - female
         if (gender == 1) {
-            // Путь для женщин: textures/entity/skins/female/f1.png
+            // path for female: textures/entity/skins/female/f1.png
             return new ResourceLocation("coremmaw", "textures/entity/skins/female/f" + skinId + ".png");
         } else {
-            // Путь для мужчин: textures/entity/skins/male/1.png
+            // path for male: textures/entity/skins/male/1.png
             return new ResourceLocation("coremmaw", "textures/entity/skins/male/" + skinId + ".png");
         }
     }
 
     public static int getRandomSkinId(int gender) {
-        // Выбирает случайное число от 1 до MAX
+        // choose random number 1 до MAX
         return RANDOM.nextInt(gender == 1 ? FEMALE_COUNT : MALE_COUNT) + 1;
     }
 

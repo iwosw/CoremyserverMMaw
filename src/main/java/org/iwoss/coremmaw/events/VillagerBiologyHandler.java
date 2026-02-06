@@ -11,14 +11,12 @@ import org.iwoss.coremmaw.util.VillagerBiologyController;
 public class VillagerBiologyHandler {
 
     /**
-     * Вызывается, когда любая сущность заходит в мир (спавн, загрузка чанка).
+     * called when all entity join to world
      */
     @SubscribeEvent
     public static void onVillagerSpawn(EntityJoinLevelEvent event) {
         if (event.getEntity() instanceof Villager villager && !event.getLevel().isClientSide) {
-            // Если пол еще не назначен в NBT
             if (!villager.getPersistentData().contains("Gender")) {
-                // Вызываем единый контроллер, который всё сделает по UUID
                 org.iwoss.coremmaw.util.VillagerBiologyController.applyBiology(villager);
             }
         }

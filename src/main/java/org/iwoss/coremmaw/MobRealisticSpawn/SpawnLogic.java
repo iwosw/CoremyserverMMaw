@@ -14,9 +14,9 @@ import org.iwoss.coremmaw.Coremmaw;
 
 import java.util.Random;
 
+//bad workin
 
-
-@Mod.EventBusSubscriber(modid = Coremmaw.MODID)
+//@Mod.EventBusSubscriber(modid = Coremmaw.MODID)
 public class SpawnLogic {
 
     private static final Random RANDOM = new Random();

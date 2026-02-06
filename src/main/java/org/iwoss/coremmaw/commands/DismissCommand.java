@@ -38,19 +38,17 @@ public class DismissCommand {
                     CompoundTag rNbt = recruit.getPersistentData();
                     CompoundTag vNbt = villager.getPersistentData();
 
-                    // 1. ВОССТАНАВЛИВАЕМ ВНЕШНОСТЬ (Gender и SkinID)
+                    // 1. RESTORING APPEARANCE(Gender и SkinID)
                     int savedGender = rNbt.getInt("Gender");
                     int savedSkin = rNbt.getInt("SkinID");
 
                     vNbt.putInt("Gender", savedGender);
                     vNbt.putInt("SkinID", savedSkin);
 
-                    // 2. ОЧИЩАЕМ ИМЯ (Убираем " (Пахарь)" и лишние иконки)
+                    // 2. CLEAR NAME
                     if (recruit.hasCustomName()) {
                         String fullName = recruit.getCustomName().getString();
-                        // Отрезаем всё, что идет после скобки
                         String cleanName = fullName.split(" \\(")[0];
-                        // Убираем старые иконки пола, чтобы не дублировать
                         cleanName = cleanName.replace("§b♂ ", "").replace("§d♀ ", "");
 
                         String icon = (savedGender == 0) ? "§b♂ " : "§d♀ ";
@@ -58,7 +56,7 @@ public class DismissCommand {
                         villager.setCustomNameVisible(true);
                     }
 
-                    // 3. ВОССТАНАВЛИВАЕМ ГРАМОТУ
+                    // 3. RESTORING SCROLL
                     if (rNbt.hasUUID("OriginalScrollID")) {
                         vNbt.putUUID("BoundScrollID", rNbt.getUUID("OriginalScrollID"));
                     }

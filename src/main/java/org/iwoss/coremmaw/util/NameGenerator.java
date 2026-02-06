@@ -2,6 +2,10 @@ package org.iwoss.coremmaw.util;
 
 import java.util.Random;
 
+//only east-slavic names
+//but wait for update
+
+
 public class NameGenerator {
     private static final Random RANDOM = new Random();
 
@@ -23,9 +27,9 @@ public class NameGenerator {
     };
 
     public static String getRandomName(int gender) {
-        if (gender == 0) { // Мужчина
+        if (gender == 0) { // male
             return MALE_NAMES[RANDOM.nextInt(MALE_NAMES.length)];
-        } else { // Женщина
+        } else { // female
             return FEMALE_NAMES[RANDOM.nextInt(FEMALE_NAMES.length)];
         }
     }
