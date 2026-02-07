@@ -1,3 +1,4 @@
+// Coremmaw.java
 package org.iwoss.coremmaw;
 
 import com.mojang.logging.LogUtils;
@@ -31,6 +32,7 @@ import org.iwoss.coremmaw.commands.LevyCommand;
 import org.iwoss.coremmaw.init.ItemInit;
 import org.iwoss.coremmaw.init.ModItems;
 import org.slf4j.Logger;
+import org.iwoss.coremmaw.util.VillagerGenderData;
 
 // The value here should match an entry in the META-INF/mods.toml file
 @Mod(Coremmaw.MODID)
@@ -155,4 +157,3 @@ public class Coremmaw {
         }
     }
 }
-
