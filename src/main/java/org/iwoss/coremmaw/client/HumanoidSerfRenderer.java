@@ -1,5 +1,7 @@
-package org.iwoss.coremmaw.render;
+package org.iwoss.coremmaw.client;
 
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraft.client.model.PlayerModel;
 import net.minecraft.client.model.geom.ModelLayers;
 import net.minecraft.client.renderer.entity.EntityRendererProvider;
@@ -10,6 +12,8 @@ import net.minecraft.world.entity.npc.Villager;
 import org.iwoss.coremmaw.util.SkinManager;
 import org.iwoss.coremmaw.util.VillagerBiologyController;
 
+
+@OnlyIn(Dist.CLIENT)
 public class HumanoidSerfRenderer<T extends LivingEntity> extends LivingEntityRenderer<T, PlayerModel<T>> {
 
     public HumanoidSerfRenderer(EntityRendererProvider.Context context) {

@@ -6,6 +6,7 @@
       <excludeFolder url="file://$MODULE_DIR$/../../src/main/resources/assets/coremmaw/models" />
       <excludeFolder url="file://$MODULE_DIR$/../../src/main/java/org/iwoss/coremmaw/entity/client" />
       <excludeFolder url="file://$MODULE_DIR$/../../src/main/resources/data/coremmaw" />
+      <excludeFolder url="file://$MODULE_DIR$/../../src/main/java/org/iwoss/coremmaw/client/render" />
     </content>
   </component>
   <component name="FacetManager">

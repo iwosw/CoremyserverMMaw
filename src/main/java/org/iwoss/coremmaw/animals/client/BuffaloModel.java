@@ -1,11 +1,14 @@
 package org.iwoss.coremmaw.animals.client;
 
 import net.minecraft.resources.ResourceLocation;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.api.distmarker.OnlyIn;
 import org.iwoss.coremmaw.Coremmaw;
 import org.iwoss.coremmaw.animals.entity.BuffaloEntity;
 import software.bernie.geckolib.model.GeoModel;
 
 // inherit geomodel
+@OnlyIn(Dist.CLIENT)
 public class BuffaloModel extends GeoModel<BuffaloEntity> {
 
     @Override

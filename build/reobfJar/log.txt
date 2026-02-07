@@ -138,24 +138,24 @@ Adding Libraries to Inheritance
 Reading Input: C:\Users\oivan\CoreMMaw\build\libs\coremmaw-1.0-SNAPSHOT.jar
 Adding input to inheritance map
 Processing entries
-Conflicting propagated mapping for org/iwoss/coremmaw/animals/entity/BuffaloEntity$BuffaloFollowLeaderGoal/canUse()Z from net/minecraft/world/entity/ai/goal/Goal/canUse()Z: canUse -> m_8036_
-Conflicting propagated mapping for org/iwoss/coremmaw/animals/entity/BuffaloEntity$BuffaloFollowLeaderGoal/tick()V from net/minecraft/world/entity/ai/goal/Goal/tick()V: tick -> m_8037_
 Conflicting propagated mapping for org/iwoss/coremmaw/animals/entity/BuffaloEntity$BuffaloAutoBreedGoal/canUse()Z from net/minecraft/world/entity/ai/goal/Goal/canUse()Z: canUse -> m_8036_
+Conflicting propagated mapping for org/iwoss/coremmaw/animals/entity/BuffaloEntity$BuffaloFollowLeaderGoal/canUse()Z from net/minecraft/world/entity/ai/goal/Goal/canUse()Z: canUse -> m_8036_
 Conflicting propagated mapping for org/iwoss/coremmaw/animals/entity/BuffaloEntity$BuffaloAutoBreedGoal/start()V from net/minecraft/world/entity/ai/goal/Goal/start()V: start -> m_8056_
 Conflicting propagated mapping for org/iwoss/coremmaw/animals/entity/BuffaloEntity$BuffaloSmartPanicGoal/canUse()Z from net/minecraft/world/entity/ai/goal/PanicGoal/canUse()Z: canUse -> m_8036_
+Conflicting propagated mapping for org/iwoss/coremmaw/animals/entity/BuffaloEntity$BuffaloFollowLeaderGoal/tick()V from net/minecraft/world/entity/ai/goal/Goal/tick()V: tick -> m_8037_
 Conflicting propagated mapping for org/iwoss/coremmaw/animals/entity/BuffaloEntity$BuffaloSmartPanicGoal/stop()V from net/minecraft/world/entity/ai/goal/PanicGoal/stop()V: stop -> m_8041_
 Conflicting propagated mapping for org/iwoss/coremmaw/animals/entity/BuffaloEntity$BuffaloSmartPanicGoal/start()V from net/minecraft/world/entity/ai/goal/PanicGoal/start()V: start -> m_8056_
+Conflicting propagated mapping for org/iwoss/coremmaw/client/HumanoidSerfRenderer/getTextureLocation(Lnet/minecraft/world/entity/Entity;)Lnet/minecraft/resources/ResourceLocation; from net/minecraft/client/renderer/entity/EntityRenderer/getTextureLocation(Lnet/minecraft/world/entity/Entity;)Lnet/minecraft/resources/ResourceLocation;: getTextureLocation -> m_5478_
 Conflicting propagated mapping for org/iwoss/coremmaw/animals/client/BuffaloRenderer/render(Lnet/minecraft/world/entity/Entity;FFLcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/client/renderer/MultiBufferSource;I)V from net/minecraft/client/renderer/entity/EntityRenderer/render(Lnet/minecraft/world/entity/Entity;FFLcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/client/renderer/MultiBufferSource;I)V: render -> m_7392_
 Conflicting propagated mapping for org/iwoss/coremmaw/animals/client/BuffaloRenderer/getTextureLocation(Lnet/minecraft/world/entity/Entity;)Lnet/minecraft/resources/ResourceLocation; from net/minecraft/client/renderer/entity/EntityRenderer/getTextureLocation(Lnet/minecraft/world/entity/Entity;)Lnet/minecraft/resources/ResourceLocation;: getTextureLocation -> m_5478_
+Conflicting propagated mapping for net/minecraft/world/entity/LivingEntity/lambda$addAdditionalSaveData$3(Lnet/minecraft/nbt/CompoundTag;Lnet/minecraft/nbt/Tag;)V from net/minecraft/world/entity/player/Player/lambda$addAdditionalSaveData$3(Lnet/minecraft/nbt/CompoundTag;Lnet/minecraft/nbt/Tag;)V: lambda$addAdditionalSaveData$3 -> m_219754_
 Conflicting propagated mapping for org/iwoss/coremmaw/animals/entity/BuffaloEntity/getBreedOffspring(Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/world/entity/AgeableMob;)Lnet/minecraft/world/entity/AgeableMob; from net/minecraft/world/entity/AgeableMob/getBreedOffspring(Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/world/entity/AgeableMob;)Lnet/minecraft/world/entity/AgeableMob;: getBreedOffspring -> m_142606_
 Conflicting propagated mapping for org/iwoss/coremmaw/animals/entity/BuffaloEntity/rotlerp(FFF)F from net/minecraft/world/entity/Mob/rotlerp(FFF)F: rotlerp -> m_21376_
 Conflicting propagated mapping for org/iwoss/coremmaw/animals/entity/BuffaloEntity/tick()V from net/minecraft/world/entity/Mob/tick()V: tick -> m_8119_
 Conflicting propagated mapping for org/iwoss/coremmaw/animals/entity/BuffaloEntity/doHurtTarget(Lnet/minecraft/world/entity/Entity;)Z from net/minecraft/world/entity/Mob/doHurtTarget(Lnet/minecraft/world/entity/Entity;)Z: doHurtTarget -> m_7327_
 Conflicting propagated mapping for org/iwoss/coremmaw/animals/entity/BuffaloEntity/registerGoals()V from net/minecraft/world/entity/Mob/registerGoals()V: registerGoals -> m_8099_
-Conflicting propagated mapping for net/minecraft/world/entity/LivingEntity/lambda$addAdditionalSaveData$3(Lnet/minecraft/nbt/CompoundTag;Lnet/minecraft/nbt/Tag;)V from net/minecraft/world/entity/player/Player/lambda$addAdditionalSaveData$3(Lnet/minecraft/nbt/CompoundTag;Lnet/minecraft/nbt/Tag;)V: lambda$addAdditionalSaveData$3 -> m_219754_
 Conflicting propagated mapping for net/minecraftforge/event/BuildCreativeModeTabContentsEvent/accept(Lnet/minecraft/world/item/ItemStack;Lnet/minecraft/world/item/CreativeModeTab$TabVisibility;)V from net/minecraft/world/item/CreativeModeTab$Output/accept(Lnet/minecraft/world/item/ItemStack;Lnet/minecraft/world/item/CreativeModeTab$TabVisibility;)V: accept -> m_246267_
-Conflicting propagated mapping for org/iwoss/coremmaw/render/HumanoidSerfRenderer/getTextureLocation(Lnet/minecraft/world/entity/Entity;)Lnet/minecraft/resources/ResourceLocation; from net/minecraft/client/renderer/entity/EntityRenderer/getTextureLocation(Lnet/minecraft/world/entity/Entity;)Lnet/minecraft/resources/ResourceLocation;: getTextureLocation -> m_5478_
-Conflicting propagated mapping for org/iwoss/coremmaw/init/ItemInit$1/appendHoverText(Lnet/minecraft/world/item/ItemStack;Lnet/minecraft/world/level/Level;Ljava/util/List;Lnet/minecraft/world/item/TooltipFlag;)V from net/minecraft/world/item/Item/appendHoverText(Lnet/minecraft/world/item/ItemStack;Lnet/minecraft/world/level/Level;Ljava/util/List;Lnet/minecraft/world/item/TooltipFlag;)V: appendHoverText -> m_7373_
+Conflicting propagated mapping for org/iwoss/coremmaw/items/OwnerShipScrollItem/appendHoverText(Lnet/minecraft/world/item/ItemStack;Lnet/minecraft/world/level/Level;Ljava/util/List;Lnet/minecraft/world/item/TooltipFlag;)V from net/minecraft/world/item/Item/appendHoverText(Lnet/minecraft/world/item/ItemStack;Lnet/minecraft/world/level/Level;Ljava/util/List;Lnet/minecraft/world/item/TooltipFlag;)V: appendHoverText -> m_7373_
 Conflicting propagated mapping for net/minecraftforge/common/ForgeSpawnEggItem/getType(Lnet/minecraft/nbt/CompoundTag;)Lnet/minecraft/world/entity/EntityType; from net/minecraft/world/item/SpawnEggItem/getType(Lnet/minecraft/nbt/CompoundTag;)Lnet/minecraft/world/entity/EntityType;: getType -> m_43228_
 Adding extras
 Sorting
@@ -287,14 +287,14 @@ Writing Output: C:\Users\oivan\CoreMMaw\build\reobfJar\output.jar
   org/iwoss/coremmaw/animals/entity/BuffaloEntity$BuffaloFollowLeaderGoal.class
   org/iwoss/coremmaw/animals/entity/BuffaloEntity$BuffaloSmartPanicGoal.class
   org/iwoss/coremmaw/animals/entity/BuffaloEntity.class
+  org/iwoss/coremmaw/client/
+  org/iwoss/coremmaw/client/HumanoidSerfRenderer.class
   org/iwoss/coremmaw/commands/
   org/iwoss/coremmaw/commands/DismissCommand.class
   org/iwoss/coremmaw/commands/LevyCommand.class
   org/iwoss/coremmaw/compat/
   org/iwoss/coremmaw/compat/ModCompat.class
   org/iwoss/coremmaw/compat/RecruitCompatHandler.class
-  org/iwoss/coremmaw/compat/alexsmobs/
-  org/iwoss/coremmaw/compat/alexsmobs/NewBisonHerdLogic.class
   org/iwoss/coremmaw/events/
   org/iwoss/coremmaw/events/RecruitBiologyHandler.class
   org/iwoss/coremmaw/events/SerfdomEventHandler.class
@@ -304,12 +304,11 @@ Writing Output: C:\Users\oivan\CoreMMaw\build\reobfJar\output.jar
   org/iwoss/coremmaw/foodspoliagefunction/FoodSpoilageHandler.class
   org/iwoss/coremmaw/foodspoliagefunction/SpoilageLogic.class
   org/iwoss/coremmaw/init/
-  org/iwoss/coremmaw/init/ItemInit$1.class
   org/iwoss/coremmaw/init/ItemInit.class
   org/iwoss/coremmaw/init/ModEntities.class
   org/iwoss/coremmaw/init/ModItems.class
-  org/iwoss/coremmaw/render/
-  org/iwoss/coremmaw/render/HumanoidSerfRenderer.class
+  org/iwoss/coremmaw/items/
+  org/iwoss/coremmaw/items/OwnerShipScrollItem.class
   org/iwoss/coremmaw/util/
   org/iwoss/coremmaw/util/NameGenerator.class
   org/iwoss/coremmaw/util/RecruitRandomizer.class
