@@ -2,10 +2,8 @@ package org.iwoss.coremmaw;
 
 import com.mojang.logging.LogUtils;
 import net.minecraft.core.registries.Registries;
-import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.CreativeModeTab;
 import net.minecraft.world.item.CreativeModeTabs;
-import net.minecraft.world.item.Item;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockBehaviour;
@@ -28,8 +26,9 @@ import net.minecraftforge.registries.ForgeRegistries;
 import net.minecraftforge.registries.RegistryObject;
 import org.iwoss.coremmaw.commands.DismissCommand;
 import org.iwoss.coremmaw.commands.LevyCommand;
+import org.iwoss.coremmaw.commands.MeetCommand;
 import org.iwoss.coremmaw.init.ItemInit;
-import org.iwoss.coremmaw.init.ModItems;
+import org.iwoss.coremmaw.network.PacketHandler;
 import org.slf4j.Logger;
 
 // The value here should match an entry in the META-INF/mods.toml file
@@ -38,7 +37,7 @@ public class Coremmaw {
     @SubscribeEvent
     public void onRegisterCommands(RegisterCommandsEvent event) {
         LevyCommand.register(event.getDispatcher());
-
+        MeetCommand.register(event.getDispatcher());
         DismissCommand.register(event.getDispatcher());
     }
 
@@ -78,6 +77,11 @@ public class Coremmaw {
     }
 
     private void commonSetup(final FMLCommonSetupEvent event) {
+        //use enqueueWork for flow-safety registry packet
+        event.enqueueWork(() -> {
+            PacketHandler.register();
+        });
+
         // Some common setup code
         LOGGER.info("HELLO FROM COMMON SETUP");
         LOGGER.info("DIRT BLOCK >> {}", ForgeRegistries.BLOCKS.getKey(Blocks.DIRT));

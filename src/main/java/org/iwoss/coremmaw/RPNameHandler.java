@@ -1,67 +1,66 @@
 package org.iwoss.coremmaw;
 
 import com.mojang.brigadier.arguments.StringArgumentType;
+import net.minecraft.client.Minecraft;
 import net.minecraft.commands.Commands;
-import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Player;
 import net.minecraftforge.client.event.RenderNameTagEvent;
 import net.minecraftforge.event.RegisterCommandsEvent;
 import net.minecraftforge.eventbus.api.Event;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
+import net.minecraftforge.network.PacketDistributor;
+import org.iwoss.coremmaw.network.ClientKnowledgeStorage;
+import org.iwoss.coremmaw.network.PacketHandler;
+import org.iwoss.coremmaw.network.SyncRPNamePacket;
 
-@Mod.EventBusSubscriber(modid = Coremmaw.MODID)
+@Mod.EventBusSubscriber(modid =  Coremmaw.MODID)
 public class RPNameHandler {
 
-    //FIRST. command for setting nickname
     @SubscribeEvent
     public static void onRegisterCommands(RegisterCommandsEvent event) {
         event.getDispatcher().register(Commands.literal("setname")
-        //greedyString allows enter name with spaces, for example "Ivan Grozniy"
                 .then(Commands.argument("name", StringArgumentType.greedyString())
                         .executes(context -> {
-                            //Getting text which was entered player
                             String newName = StringArgumentType.getString(context, "name");
-                            //hide player which is typing command
-                            Player player = context.getSource().getPlayerOrException();
+                            ServerPlayer player = context.getSource().getPlayerOrException();
 
-                            /* Saving name in Minecraft with the help of NBT about the player
-                            This data saving always*/
+                            //1. Save name in NBT on server
                             player.getPersistentData().putString("rpname", newName);
 
-                            // send message to player
+                            //2. Send packet all players, which see this player
+                            PacketHandler.INSTANCE.send(PacketDistributor.TRACKING_ENTITY_AND_SELF.with(() -> player),
+                                    new SyncRPNamePacket(player.getUUID(), newName));
+
                             context.getSource().sendSuccess(() ->
-                                    Component.literal("Your name is " + newName), false);
+                                    Component.literal("Ваше текущее имя: " + newName), false);
                             return 1;
 
                         })));
 
     }
 
-    // SECOND. Rendering Nickname over the player
     @SubscribeEvent
     public static void onRenderName(RenderNameTagEvent event) {
-        // checking what we watch on player
+        // Create variable
         if (event.getEntity() instanceof Player targetPlayer) {
+            Player localPlayer = Minecraft.getInstance().player;
 
-            // check nbt the one we're looking at
-            CompoundTag data = targetPlayer.getPersistentData();
-            if (data.contains("rpname")) {
-                String name = data.getString("rpname");
+            if (localPlayer == null || targetPlayer == localPlayer) return;
 
-                //change nickname
-                event.setContent(Component.literal(name));
+            // Check in data NBT
+            if (ClientKnowledgeStorage.isKnown(targetPlayer.getUUID())) {
+                String rpName = ClientKnowledgeStorage.getRPName(targetPlayer.getUUID());
+
+                if (!rpName.isEmpty()) {
+                    // Set RP name
+                    event.setContent(Component.literal(rpName));
+                }
             } else {
                 event.setResult(Event.Result.DENY);
-
             }
-
         }
     }
-
-
-
-
-
 }
