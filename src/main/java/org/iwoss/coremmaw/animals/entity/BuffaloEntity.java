@@ -1,11 +1,17 @@
 package org.iwoss.coremmaw.animals.entity;
 
 import net.minecraft.core.BlockPos;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.syncher.EntityDataAccessor;
+import net.minecraft.network.syncher.EntityDataSerializers;
+import net.minecraft.network.syncher.SynchedEntityData;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundEvents;
-import net.minecraft.util.Mth;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.InteractionHand;
+import net.minecraft.world.InteractionResult;
+import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.*;
 import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
@@ -13,166 +19,158 @@ import net.minecraft.world.entity.ai.goal.*;
 import net.minecraft.world.entity.ai.goal.target.HurtByTargetGoal;
 import net.minecraft.world.entity.animal.Animal;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
+import net.minecraft.world.item.crafting.Ingredient;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LevelAccessor;
 import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec3;
-import org.jetbrains.annotations.Nullable;
 import org.iwoss.coremmaw.init.ModEntities;
+import org.jetbrains.annotations.Nullable;
 import software.bernie.geckolib.animatable.GeoEntity;
 import software.bernie.geckolib.core.animatable.instance.AnimatableInstanceCache;
-import software.bernie.geckolib.core.animation.AnimatableManager;
-import software.bernie.geckolib.core.animation.AnimationController;
-import software.bernie.geckolib.core.animation.RawAnimation;
+import software.bernie.geckolib.core.animation.*;
+import software.bernie.geckolib.core.object.PlayState;
 import software.bernie.geckolib.util.GeckoLibUtil;
 
-import java.util.Comparator;
+import java.util.EnumSet;
 import java.util.List;
 
 public class BuffaloEntity extends Animal implements GeoEntity {
+
     private final AnimatableInstanceCache cache = GeckoLibUtil.createInstanceCache(this);
 
-    // logic herd
+    private static final EntityDataAccessor<Boolean> IS_PANICKING =
+            SynchedEntityData.defineId(BuffaloEntity.class, EntityDataSerializers.BOOLEAN);
+    private static final EntityDataAccessor<Boolean> IS_ATTACKING =
+            SynchedEntityData.defineId(BuffaloEntity.class, EntityDataSerializers.BOOLEAN);
+    private static final EntityDataAccessor<Boolean> IS_STRIKING =
+            SynchedEntityData.defineId(BuffaloEntity.class, EntityDataSerializers.BOOLEAN);
+
     private BuffaloEntity herdLeader;
     private int groupCheckTimer = 0;
-    private boolean panicking = false;
+    private int panicTimer = 0;
+    private int attackResetTimer = 0;
+    private int strikeTimer = 0;
 
     public BuffaloEntity(EntityType<? extends Animal> type, Level level) {
         super(type, level);
         this.setMaxUpStep(1.0F);
-        this.rotOffs = 20.0F;
     }
 
-    public boolean isPanicking() {
-        return panicking;
+    @Override
+    protected void defineSynchedData() {
+        super.defineSynchedData();
+        this.entityData.define(IS_PANICKING, false);
+        this.entityData.define(IS_ATTACKING, false);
+        this.entityData.define(IS_STRIKING, false);
     }
 
-    public void setPanicking(boolean value) {
-        panicking = value;
-    }
+    public boolean isPanicking() { return entityData.get(IS_PANICKING); }
+    public void setPanicking(boolean v) { entityData.set(IS_PANICKING, v); }
+
+    public boolean isAttacking() { return entityData.get(IS_ATTACKING); }
+    public void setAttacking(boolean v) { entityData.set(IS_ATTACKING, v); }
+
+    public boolean isStriking() { return entityData.get(IS_STRIKING); }
+    public void setStriking(boolean v) { entityData.set(IS_STRIKING, v); }
 
     public static AttributeSupplier.Builder createAttributes() {
         return Animal.createMobAttributes()
                 .add(Attributes.MAX_HEALTH, 60.0D)
-                .add(Attributes.MOVEMENT_SPEED, 0.28D) // Базовая скорость
-                .add(Attributes.KNOCKBACK_RESISTANCE, 1.0D)
-                .add(Attributes.ATTACK_DAMAGE, 8.0D)
-                .add(Attributes.ATTACK_KNOCKBACK, 1.5D)
-                .add(Attributes.FOLLOW_RANGE, 32.0D);
+                .add(Attributes.MOVEMENT_SPEED, 0.28D)
+                .add(Attributes.KNOCKBACK_RESISTANCE, 0.9D)
+                .add(Attributes.ATTACK_DAMAGE, 7.0D)
+                .add(Attributes.ATTACK_KNOCKBACK, 1.2D)
+                .add(Attributes.FOLLOW_RANGE, 32.0D)
+                .add(Attributes.ATTACK_SPEED, 1.2D);
     }
 
-
-    //50/50 code
     @Override
     protected void registerGoals() {
-        this.goalSelector.addGoal(0, new FloatGoal(this));
+        goalSelector.addGoal(0, new FloatGoal(this));
+        goalSelector.addGoal(1, new CustomMeleeAttackGoal(this, 1.3D, true));
+        goalSelector.addGoal(2, new BuffaloPanicGoal(this));
+        goalSelector.addGoal(3, new BreedGoal(this, 1.0D));
+        goalSelector.addGoal(4, new TemptGoal(this, 1.25D, Ingredient.of(Items.WHEAT), false));
+        goalSelector.addGoal(5, new FollowParentGoal(this, 1.25D));
+        goalSelector.addGoal(6, new LookAtPlayerGoal(this, Player.class, 6.0F));
+        goalSelector.addGoal(7, new RandomLookAroundGoal(this));
+        goalSelector.addGoal(8, new RandomStrollGoal(this, 0.9D));
 
-        // smart pamic
-        this.goalSelector.addGoal(1, new BuffaloSmartPanicGoal(this, 2.0D));
-
-        // follow leader
-        this.goalSelector.addGoal(2, new BuffaloFollowLeaderGoal(this));
-
-        this.goalSelector.addGoal(3, new MeleeAttackGoal(this, 1.3D, true));
-
-        this.goalSelector.addGoal(4, new AvoidEntityGoal<>(this, Player.class, 16.0F, 1.4D, 1.6D, (entity) -> {
-            return this.isBaby() || this.getHealth() < this.getMaxHealth() * 0.4;
-        }));
-
-        this.goalSelector.addGoal(5, new BuffaloAutoBreedGoal(this, 1.0D));
-        this.goalSelector.addGoal(6, new BreedGoal(this, 1.0D));
-        this.goalSelector.addGoal(7, new FollowParentGoal(this, 1.1D));
-        this.goalSelector.addGoal(8, new WaterAvoidingRandomStrollGoal(this, 1.0D));
-        this.goalSelector.addGoal(9, new LookAtPlayerGoal(this, Player.class, 6.0F));
-        this.goalSelector.addGoal(10, new RandomLookAroundGoal(this));
-
-        // help herd
-        this.targetSelector.addGoal(1, (new HurtByTargetGoal(this)).setAlertOthers());
+        targetSelector.addGoal(1, new HurtByTargetGoal(this) {
+            @Override
+            public boolean canUse() {
+                return !mob.isBaby() && super.canUse();
+            }
+        }.setAlertOthers(BuffaloEntity.class));
     }
 
-
-
-    @Override
-    public boolean doHurtTarget(Entity target) {
-        boolean flag = super.doHurtTarget(target);
-        if (flag) {
-            this.swing(InteractionHand.MAIN_HAND);
-            if (target instanceof LivingEntity livingTarget) {
-                double knockbackY = 0.5D;
-                double knockbackXZ = 0.8D;
-                Vec3 vec31 = new Vec3(target.getX() - this.getX(), 0.0D, target.getZ() - this.getZ()).normalize().scale(knockbackXZ);
-                livingTarget.setDeltaMovement(livingTarget.getDeltaMovement().x / 2.0D - vec31.x, knockbackY, livingTarget.getDeltaMovement().z / 2.0D - vec31.z);
-            }
-            this.playSound(SoundEvents.IRON_GOLEM_ATTACK, 1.0F, 1.0F);
+    static class CustomMeleeAttackGoal extends MeleeAttackGoal {
+        public CustomMeleeAttackGoal(PathfinderMob mob, double speed, boolean pause) {
+            super(mob, speed, pause);
         }
-        return flag;
-    }
 
-    @Override
-    public void tick() {
-        super.tick();
+        @Override
+        public void tick() {
+            super.tick();
 
-        if (this.level().isClientSide) {
-            this.yBodyRot = this.yBodyRotO + (this.yHeadRot - this.yBodyRotO) * 0.30F;
+            LivingEntity target = mob.getTarget();
+            if (target != null) {
+                double distSqr = mob.distanceToSqr(target);
+                double reach = getAttackReachSqr(target);
 
-            Vec3 vector = this.getDeltaMovement();
-            if (vector.horizontalDistanceSqr() > 0.005) {
-                float moveAngle = (float) (Mth.atan2(vector.z, vector.x) * (180 / Math.PI)) - 90.0F;
-                this.setYRot(this.rotlerp(this.getYRot(), moveAngle, 20.0F));
+                if (distSqr <= reach) {
+                    BuffaloEntity buffalo = (BuffaloEntity) mob;
+                    if (!buffalo.isStriking()) {
+                        buffalo.setStriking(true);
+                        buffalo.strikeTimer = 28; // ~1.4 сек — чтобы анимация дожила до урона и чуть после
+                    }
+
+                    if (getTicksUntilNextAttack() <= 0) {
+                        resetAttackCooldown();
+                        mob.doHurtTarget(target);
+                        mob.swing(InteractionHand.MAIN_HAND);
+                    }
+                }
             }
+        }
+
+        @Override
+        protected double getAttackReachSqr(LivingEntity target) {
+            return 4.5D;
         }
     }
 
-    private void findHerdLeader() {
-        List<? extends BuffaloEntity> list = this.level().getEntitiesOfClass(this.getClass(), this.getBoundingBox().inflate(20.0D));
-        if (list.size() > 1) {
-            this.herdLeader = list.stream()
-                    .filter(b -> b != this && b.isAlive())
-                    .min(Comparator.comparingInt(Entity::getId))
-                    .orElse(null);
-        } else {
-            this.herdLeader = null;
+    static class BuffaloPanicGoal extends Goal {
+        private final BuffaloEntity buffalo;
+
+        public BuffaloPanicGoal(BuffaloEntity b) {
+            this.buffalo = b;
+            setFlags(EnumSet.of(Flag.MOVE));
         }
-    }
 
-    private float rotlerp(float start, float end, float maxStep) {
-        float f = Mth.wrapDegrees(end - start);
-        if (f > maxStep) f = maxStep;
-        if (f < -maxStep) f = -maxStep;
-        return start + f;
-    }
+        @Override public boolean canUse() { return buffalo.isPanicking(); }
 
-    @Override
-    public void registerControllers(AnimatableManager.ControllerRegistrar controllers) {
-        controllers.add(new AnimationController<>(this, "controller", 4, state -> {
-
-            // 1. ATTACK
-            if (this.swingTime > 0) {
-                state.getController().setAnimationSpeed(2.8D);
-                return state.setAndContinue(RawAnimation.begin().thenPlay("attack"));
+        @Override
+        public void tick() {
+            LivingEntity last = buffalo.getLastHurtByMob();
+            if (last != null) {
+                Vec3 away = buffalo.position().subtract(last.position()).normalize().scale(16);
+                buffalo.getNavigation().moveTo(
+                        buffalo.getX() + away.x,
+                        buffalo.getY(),
+                        buffalo.getZ() + away.z,
+                        1.4D
+                );
             }
+        }
 
-            double speed = this.getDeltaMovement().horizontalDistance();
-
-            // 2. RUN / PANIC
-            if (this.isPanicking() || speed > 0.15) {
-                // Для бега множитель чуть ниже, так как анимация сама по себе короче (0.5с)
-                state.getController().setAnimationSpeed(speed * 12.0D);
-                return state.setAndContinue(RawAnimation.begin().thenLoop("panic_run"));
-            }
-
-            // 3. WALKING (bad synchronisation)
-            if (speed > 0.01) {
-                double syncSpeed = speed * 28.0D;
-
-                state.getController().setAnimationSpeed(Math.max(1.4D, syncSpeed));
-                return state.setAndContinue(RawAnimation.begin().thenLoop("walk"));
-            }
-
-            // 4. rest
-            state.getController().setAnimationSpeed(1.0D);
-            return state.setAndContinue(RawAnimation.begin().thenLoop("idle"));
-        }));
+        @Override public void stop() {
+            buffalo.getNavigation().stop();
+        }
     }
 
     @Override
@@ -180,105 +178,179 @@ public class BuffaloEntity extends Animal implements GeoEntity {
         return cache;
     }
 
+    @Override
+    public void registerControllers(AnimatableManager.ControllerRegistrar controllers) {
+        controllers.add(new AnimationController<>(this, "movement", 1, this::movementPredicate)); // 1 тик — минимум задержки
+        controllers.add(new AnimationController<>(this, "action", 1, state -> PlayState.CONTINUE));
+    }
+
+    private PlayState movementPredicate(software.bernie.geckolib.core.animation.AnimationState<BuffaloEntity> state) {
+        var controller = state.getController();
+
+        boolean panicking = isPanicking();
+        boolean striking = isStriking();
+
+        if (level().isClientSide && tickCount % 10 == 0) {
+            System.out.println("[CLIENT] panic=" + panicking + " strike=" + striking + " moving=" + isMoving() +
+                    " speed=" + getDeltaMovement().horizontalDistanceSqr());
+        }
+
+        if (striking) {
+            controller.setAnimation(RawAnimation.begin().then("attack", Animation.LoopType.LOOP));
+            return PlayState.CONTINUE;
+        }
+
+        if (panicking) {
+            controller.setAnimation(RawAnimation.begin().then("panic_run", Animation.LoopType.LOOP));
+            return PlayState.CONTINUE;
+        }
+
+        if (isMoving()) {
+            controller.setAnimation(RawAnimation.begin().then("walk", Animation.LoopType.LOOP));
+            return PlayState.CONTINUE;
+        }
+
+        controller.setAnimation(RawAnimation.begin().then("idle", Animation.LoopType.LOOP));
+        return PlayState.CONTINUE;
+    }
+
+    public boolean isMoving() {
+        double speed = getDeltaMovement().horizontalDistanceSqr();
+        return getNavigation().isInProgress() || (speed > 0.0005D && !isPanicking());
+    }
+
+    @Override
+    public boolean hurt(DamageSource source, float amount) {
+        boolean didHurt = super.hurt(source, amount);
+
+        if (didHurt && !level().isClientSide && source.getEntity() instanceof LivingEntity attacker) {
+            System.out.println("[HURT] От " + attacker.getName().getString());
+
+            if (isBaby()) {
+                setPanicking(true);
+                panicTimer = 120;
+                setTarget(null);
+                getNavigation().stop();
+                setDeltaMovement(Vec3.ZERO);
+                xxa = zza = 0.0F;
+                return didHurt;
+            }
+
+            List<BuffaloEntity> nearby = level().getEntitiesOfClass(
+                    BuffaloEntity.class,
+                    getBoundingBox().inflate(14.0)
+            ).stream().filter(b -> b.isAlive() && b != this).toList();
+
+            for (BuffaloEntity b : nearby) {
+                if (b.isBaby()) {
+                    b.setPanicking(true);
+                    b.panicTimer = 120;
+                    b.setTarget(null);
+                    b.getNavigation().stop();
+                    b.setDeltaMovement(Vec3.ZERO);
+                    b.xxa = b.zza = 0.0F;
+                } else {
+                    b.setAttacking(true);
+                    b.setTarget(attacker);
+                    b.attackResetTimer = 600;
+                }
+            }
+
+            if (nearby.isEmpty()) {
+                setPanicking(true);
+                panicTimer = 120;
+                setTarget(null);
+                getNavigation().stop();
+                setDeltaMovement(Vec3.ZERO);
+                xxa = zza = 0.0F;
+            } else {
+                setAttacking(true);
+                setTarget(attacker);
+                attackResetTimer = 600;
+            }
+        }
+
+        return didHurt;
+    }
+
+    @Override
+    public void aiStep() {
+        super.aiStep();
+
+        if (!level().isClientSide) {
+            if (isStriking() && --strikeTimer <= 0) {
+                setStriking(false);
+            }
+
+            if (isPanicking() && --panicTimer <= 0) {
+                setPanicking(false);
+                getNavigation().stop();
+                setDeltaMovement(Vec3.ZERO);
+                xxa = zza = 0.0F;
+                setTarget(null);
+            }
+
+            if (isAttacking() && (--attackResetTimer <= 0 || getTarget() == null || !getTarget().isAlive())) {
+                setAttacking(false);
+            }
+
+            if (++groupCheckTimer > 80) {
+                groupCheckTimer = 0;
+            }
+        }
+    }
+
+    @Override
+    public void readAdditionalSaveData(CompoundTag tag) {
+        super.readAdditionalSaveData(tag);
+        setPanicking(tag.getBoolean("Panicking"));
+        setAttacking(tag.getBoolean("Attacking"));
+        setStriking(tag.getBoolean("Striking"));
+        panicTimer = tag.getInt("PanicTimer");
+        attackResetTimer = tag.getInt("AttackReset");
+        strikeTimer = tag.getInt("StrikeTimer");
+    }
+
+    @Override
+    public void addAdditionalSaveData(CompoundTag tag) {
+        super.addAdditionalSaveData(tag);
+        tag.putBoolean("Panicking", isPanicking());
+        tag.putBoolean("Attacking", isAttacking());
+        tag.putBoolean("Striking", isStriking());
+        tag.putInt("PanicTimer", panicTimer);
+        tag.putInt("AttackReset", attackResetTimer);
+        tag.putInt("StrikeTimer", strikeTimer);
+    }
+
     @Nullable
     @Override
-    public AgeableMob getBreedOffspring(ServerLevel level, AgeableMob other) {
+    public AgeableMob getBreedOffspring(ServerLevel level, AgeableMob otherParent) {
         return ModEntities.BUFFALO.get().create(level);
     }
 
-    // --- internal class ai ---
+    @Override
+    protected SoundEvent getAmbientSound() { return SoundEvents.COW_AMBIENT; }
+    @Override
+    protected SoundEvent getHurtSound(DamageSource source) { return SoundEvents.COW_HURT; }
+    @Override
+    protected SoundEvent getDeathSound() { return SoundEvents.COW_DEATH; }
 
-
-    static class BuffaloFollowLeaderGoal extends Goal {
-        private final BuffaloEntity buffalo;
-        private int timeToRecalcPath;
-
-        public BuffaloFollowLeaderGoal(BuffaloEntity buffalo) {
-            this.buffalo = buffalo;
-        }
-
-        @Override
-        public boolean canUse() {
-            return buffalo.herdLeader != null && buffalo.herdLeader.isAlive() && buffalo.distanceToSqr(buffalo.herdLeader) > 9.0D;
-        }
-
-        @Override
-        public void tick() {
-            if (--this.timeToRecalcPath <= 0) {
-                this.timeToRecalcPath = 10;
-
-                double xOffset = (buffalo.getId() % 3 - 1) * 3.0D;
-                double zOffset = ((buffalo.getId() / 3) % 3 - 1) * 3.0D;
-
-                this.buffalo.getNavigation().moveTo(
-                        buffalo.herdLeader.getX() + xOffset,
-                        buffalo.herdLeader.getY(),
-                        buffalo.herdLeader.getZ() + zOffset,
-                        1.2D
-                );
-            }
-        }
+    @Override
+    protected void playStepSound(BlockPos pos, BlockState state) {
+        playSound(SoundEvents.COW_STEP, 0.15F, 1.0F);
     }
 
-    // Smart Panic (so bad)
-    static class BuffaloSmartPanicGoal extends PanicGoal {
-        private final BuffaloEntity buffalo;
-
-        public BuffaloSmartPanicGoal(BuffaloEntity mob, double speed) {
-            super(mob, speed);
-            this.buffalo = mob;
+    @Override
+    public InteractionResult mobInteract(Player player, InteractionHand hand) {
+        ItemStack stack = player.getItemInHand(hand);
+        if (stack.is(Items.WHEAT) && !isBaby()) {
+            setInLove(player);
+            if (!player.getAbilities().instabuild) stack.shrink(1);
+            return InteractionResult.sidedSuccess(level().isClientSide);
         }
-
-        @Override
-        public void start() {
-            super.start();
-            this.buffalo.setPanicking(true);
-        }
-
-        @Override
-        public void stop() {
-            super.stop();
-            this.buffalo.setPanicking(false);
-        }
-
-        @Override
-        public boolean canUse() {
-            if (super.canUse()) {
-
-                if (buffalo.herdLeader != null && buffalo.herdLeader.isPanicking()) {
-                    Vec3 leaderTarget = buffalo.herdLeader.getNavigation().getTargetPos() != null ?
-                            Vec3.atBottomCenterOf(buffalo.herdLeader.getNavigation().getTargetPos()) : null;
-
-                    if (leaderTarget != null) {
-
-                        this.posX = leaderTarget.x;
-                        this.posY = leaderTarget.y;
-                        this.posZ = leaderTarget.z;
-                        return true;
-                    }
-                }
-                return true;
-            }
-            return false;
-        }
+        return super.mobInteract(player, hand);
     }
 
-    static class BuffaloAutoBreedGoal extends Goal {
-        private final BuffaloEntity buffalo;
-        public BuffaloAutoBreedGoal(BuffaloEntity buffalo, double speed) {
-            this.buffalo = buffalo;
-        }
-        @Override
-        public boolean canUse() {
-            return this.buffalo.getAge() == 0 && !this.buffalo.isInLove() && this.buffalo.getRandom().nextInt(1000) == 0;
-        }
-        @Override
-        public void start() {
-            this.buffalo.setInLove(null);
-        }
-    }
-
-    // Rules spawn
     public static boolean checkBuffaloSpawnRules(EntityType<BuffaloEntity> type, LevelAccessor level, MobSpawnType spawnType, BlockPos pos, RandomSource random) {
         if (level.getBlockState(pos.below()).is(Blocks.AIR)) return false;
         boolean waterFound = false;
@@ -296,6 +368,7 @@ public class BuffaloEntity extends Animal implements GeoEntity {
         return waterFound && (
                 level.getBlockState(pos.below()).is(Blocks.SAND) ||
                         level.getBlockState(pos.below()).is(Blocks.RED_SAND) ||
-                        level.getBlockState(pos.below()).is(Blocks.GRASS_BLOCK));
+                        level.getBlockState(pos.below()).is(Blocks.GRASS_BLOCK)
+        );
     }
 }
